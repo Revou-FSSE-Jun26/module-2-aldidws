@@ -11,7 +11,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# DBeaver specific files (jika folder ini dijadikan workspace DBeaver)
+# DBeaver specific files (if this folder is used as a DBeaver workspace)
 .dbeaver/
 .project
 .classpath
