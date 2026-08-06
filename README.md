@@ -15,6 +15,14 @@ Before running the scripts in this repository, ensure you have the following ins
 1. **PostgreSQL** (local database server).
 2. An SQL database management tool such as **DBeaver** or **pgAdmin**.
 
+## 🐘 PostgreSQL Installation
+
+1. **Install PostgreSQL 16+**. During the installation, make sure to set a password for the `postgres` superuser and note it down.
+2. **Verify the installation** by running the following command in your terminal/command prompt:
+   ```bash
+   psql -U postgres -c "SELECT version();"
+   ```
+
 ## 🚀 Local Setup Guide
 
 Follow these steps to set up and load the database locally on your machine:
