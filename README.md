@@ -1,45 +1,167 @@
-# RevoShop Database Setup
+# RevoShop — REST API
 
-This repository contains the relational database design for RevoShop, an online store platform (featuring a car parts and modifications theme for the sample data). This project is part of the Full Stack Software Engineering (FSSE) Module 2 assignment.
+RevoShop is a back-end REST API for an online store platform specializing in car parts and modifications. It provides endpoints for managing products, categories, orders, and users, with JWT-based authentication protecting order operations.
 
-## 📁 File Structure
+---
 
-- `schema.sql`: Contains Data Definition Language (DDL) scripts to create the database tables (`users`, `categories`, `products`, `orders`, `order_items`) and establish their relationships.
-- `seed.sql`: Contains Data Manipulation Language (DML) scripts to populate the tables with initial sample data.
-- `queries.sql`: Contains a sample testing query that combines `WHERE`, `ORDER BY`, and `LIMIT` clauses.
-- `ERD_RevoShop.png`: A screenshot of the Entity-Relationship Diagram (ERD) illustrating the database schema.
+## ✨ Features Implemented
 
-## 🛠️ System Requirements
+- **Full CRUD** for Products, Categories, and Orders (Create, Read, Update, Delete).
+- **Many-to-Many relationship** between Orders and Products through the `order_items` association table (stores quantity and price per item).
+- **JWT Authentication** — order endpoints are protected; each user can only access their own orders.
+- **Data Validation** — required fields are checked before creating or updating resources; meaningful error messages are returned for missing or invalid data.
+- **Error Handling with try/except** — database operations are wrapped in try/except blocks with automatic rollback on failure.
+- **Deletion Guard** — attempting to delete a product that is still linked to active orders will be blocked by the foreign-key constraint, returning an appropriate error instead of corrupting data.
+- **User Roles** — a `role` column on the `users` table (default `customer`) supports role-based access control.
+- **Stock Management** — placing an order automatically reduces the stock of each ordered product.
 
-Before running the scripts in this repository, ensure you have the following installed:
-1. **PostgreSQL** (local database server).
-2. An SQL database management tool such as **DBeaver** or **pgAdmin**.
+---
 
-## 🐘 PostgreSQL Installation
+## 🛠️ Technologies Used
 
-1. **Install PostgreSQL 16+**. During the installation, make sure to set a password for the `postgres` superuser and note it down.
-2. **Verify the installation** by running the following command in your terminal/command prompt:
-   ```bash
-   psql -U postgres -c "SELECT version();"
-   ```
+| Layer | Technology |
+|-------|-----------|
+| Framework | Flask |
+| ORM | SQLAlchemy (Flask-SQLAlchemy) |
+| Migrations | Flask-Migrate (Alembic) |
+| Database | PostgreSQL |
+| DB Admin Tool | pgAdmin |
+| Authentication | PyJWT |
+| Environment Variables | python-dotenv |
+| Production Server | Gunicorn |
+| Testing | pytest |
+| Load Testing | Locust |
 
-## 🚀 Local Setup Guide
+---
 
-Follow these steps to set up and load the database locally on your machine:
+## 🚀 How to Run the Project Locally
 
-1. **Create a New Database**
-   - Open DBeaver or pgAdmin.
-   - Create a new database named `revoshop_db`.
-   - Ensure you are connected to the `revoshop_db` database before proceeding to the next steps.
+### 1. Clone the repository
 
-2. **Create the Table Schema**
-   - Open the `schema.sql` file in your SQL Editor.
-   - Execute the entire script to create the table structures and their relationships.
+```bash
+git clone https://github.com/<your-username>/module-2-aldidws.git
+cd module-2-aldidws
+```
 
-3. **Insert Sample Data**
-   - Open the `seed.sql` file in your SQL Editor.
-   - Execute the script to insert sample users, categories, products, orders, and order items into the newly created tables.
+### 2. Create and activate a virtual environment
 
-4. **Test the Queries (Optional)**
-   - Open the `queries.sql` file in your SQL Editor.
-   - Run the query to verify that the data has been successfully inserted and can be retrieved according to the specified conditions (e.g., retrieving the top 2 most expensive products in a specific category).
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# macOS / Linux
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+Create a `.env` file in the project root (use `.env.example` as a reference):
+
+```
+FLASK_APP=app.py
+FLASK_ENV=development
+DATABASE_URL=postgresql://postgres:<password>@localhost:5432/revoshop_db
+SECRET_KEY=your-secret-key
+```
+
+### 5. Create the database
+
+Open pgAdmin or your preferred SQL tool and create a database named `revoshop_db`.
+
+### 6. Run migrations
+
+```bash
+flask db upgrade
+```
+
+### 7. Start the development server
+
+```bash
+flask run
+```
+
+The API will be available at `http://localhost:5000`.
+
+---
+
+## 📸 Screenshots
+
+### Postman — HTTP Methods
+
+| Method | Description | Screenshot |
+|--------|-------------|------------|
+| POST | Create a new user | ![Create Users](Image/Create%20users.png) |
+| GET | Get all products | ![Get All Products](Image/Get%20All%20Product.png) |
+| GET | Get product (JSON response) | ![Get Product JSON](Image/Get%20product%20JSON.png) |
+
+### pgAdmin — Database Tables
+
+| View | Screenshot |
+|------|------------|
+| Table Diagram / ERD | ![Diagram Tables](Image/Diagram%20tables.PNG) |
+| Order Items table | ![Order Items](Image/Order_items.png) |
+| Role column on Users | ![Role Column](Image/Role%20column%20to%20users.png) |
+
+---
+
+## 📁 Project Structure
+
+```
+module-2-aldidws/
+├── app/
+│   ├── __init__.py          # App factory, extensions, blueprint registration
+│   ├── models/
+│   │   ├── user.py          # User model (with role)
+│   │   ├── product.py       # Product model
+│   │   ├── category.py      # Category model
+│   │   ├── order.py         # Order model
+│   │   └── order_item.py    # order_items association table
+│   └── routes/
+│       ├── users.py         # Register & login endpoints
+│       ├── products.py      # CRUD products
+│       ├── categories.py    # CRUD categories
+│       ├── orders.py        # CRUD orders (JWT-protected)
+│       ├── seed.py          # Seed data endpoint
+│       └── health.py        # Health-check endpoint
+├── migrations/              # Alembic migration scripts
+├── Schema/
+│   ├── schema.sql           # DDL scripts
+│   ├── seed.sql             # Sample data
+│   └── queries.sql          # Example queries
+├── Image/                   # Screenshots for documentation
+├── app.py                   # Application entry point
+├── requirements.txt         # Python dependencies
+└── README.md
+```
+
+---
+
+## 📝 API Endpoints Overview
+
+| Resource | Method | Endpoint | Auth |
+|----------|--------|----------|------|
+| Users | POST | `/users/register` | No |
+| Users | POST | `/users/login` | No |
+| Products | GET | `/products` | No |
+| Products | GET | `/products/<id>` | No |
+| Products | POST | `/products` | No |
+| Products | PUT | `/products/<id>` | No |
+| Products | DELETE | `/products/<id>` | No |
+| Categories | GET | `/categories` | No |
+| Categories | GET | `/categories/<id>` | No |
+| Categories | POST | `/categories` | No |
+| Categories | PUT | `/categories/<id>` | No |
+| Categories | DELETE | `/categories/<id>` | No |
+| Orders | GET | `/orders` | JWT |
+| Orders | GET | `/orders/<id>` | JWT |
+| Orders | POST | `/orders` | JWT |
+| Orders | DELETE | `/orders/<id>` | JWT |
+| Health | GET | `/health` | No |
