@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+import datetime
 from app import db
 from app.models import User
 
@@ -28,6 +30,7 @@ def register_user():
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
+    role = data.get('role')
 
     if not username or not email or not password:
         return jsonify({'error': 'username, email and password are required'}), 400
@@ -36,6 +39,7 @@ def register_user():
         username=username,
         email=email,
         password_hash=generate_password_hash(password),
+        role=role,
     )
 
     try:
@@ -46,3 +50,35 @@ def register_user():
         return jsonify({'error': 'email already registered'}), 409
 
     return jsonify(user.to_dict()), 201
+
+
+@user_bp.route('/auth/login', methods=['POST'])
+def login():
+    data = request.get_json(silent=True) or {}
+    email = data.get('email')
+    password = data.get('password')
+
+    print(email, password)
+    if not email or not password:
+        return jsonify({'error': 'email and password are required'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user or not check_password_hash(user.password_hash, password):
+        return jsonify({'error': 'invalid email or password'}), 401
+
+    from flask import current_app
+    token = jwt.encode(
+        {
+            'user_id': user.id,
+            'role': user.role,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        },
+        current_app.config['SECRET_KEY'],
+        algorithm='HS256'
+    )
+
+    return jsonify({
+        'token': token,
+        'user': user.to_dict()
+    }), 200

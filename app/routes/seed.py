@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
+from sqlalchemy import text
+from werkzeug.security import generate_password_hash
 from app import db
-from app.models import User, Product, Category, Order, OrderItem
+from app.models import User, Product, Category, Order, order_items
 
 seed_bp = Blueprint('seed', __name__)
 
@@ -9,9 +11,9 @@ seed_bp = Blueprint('seed', __name__)
 def seed_users():
     if User.query.count() == 0:
         sample_users = [
-            User(username='Abdul Hafidz', email='Abdul@example.com', password_hash='hashed_pw_123'),
-            User(username='Nadas Kahfi', email='Nadas@example.com', password_hash='hashed_pw_456'),
-            User(username='Hanif Adhi', email='Hanif@example.com', password_hash='hashed_pw_789'),
+            User(username='Abdul Hafidz', email='Abdul@example.com', password_hash=generate_password_hash('hashed_pw_123')),
+            User(username='Nadas Kahfi', email='Nadas@example.com', password_hash=generate_password_hash('hashed_pw_456')),
+            User(username='Hanif Adhi', email='Hanif@example.com', password_hash=generate_password_hash('hashed_pw_789')),
         ]
         db.session.add_all(sample_users)
         db.session.commit()
@@ -23,7 +25,7 @@ def seed_users():
 def seed_products():
     categories = Category.query.order_by(Category.id).all()
     if len(categories) < 3:
-        return jsonify({"error": "Harus melakukan seed categories terlebih dahulu!"}), 400
+        return jsonify({"error": "You must seed the categories first!"}), 400
 
     if Product.query.count() == 0:
         wheels = categories[0].id
@@ -65,7 +67,9 @@ def seed_orders():
     if len(users) < 2 or len(products) < 4:
         return jsonify({"error": "Harus melakukan seed users dan products terlebih dahulu!"}), 400
 
-    if OrderItem.query.count() == 0:
+    # Check if order_items already has data
+    count = db.session.execute(db.select(db.func.count()).select_from(order_items)).scalar()
+    if count == 0:
         sample_orders = [
             Order(user_id=users[0].id, total_amount=25000000, status='pending'),
             Order(user_id=users[1].id, total_amount=5650000, status='pending'),
@@ -73,12 +77,12 @@ def seed_orders():
         db.session.add_all(sample_orders)
         db.session.commit()
 
-        sample_order_items = [
-            OrderItem(order_id=sample_orders[0].id, product_id=products[1].id, quantity=1, price=25000000),
-            OrderItem(order_id=sample_orders[1].id, product_id=products[2].id, quantity=1, price=5500000),
-            OrderItem(order_id=sample_orders[1].id, product_id=products[3].id, quantity=2, price=150000),
-        ]
-        db.session.add_all(sample_order_items)
+        # Insert into order_items association table
+        db.session.execute(order_items.insert().values([
+            {"order_id": sample_orders[0].id, "product_id": products[1].id, "quantity": 1, "price": 25000000},
+            {"order_id": sample_orders[1].id, "product_id": products[2].id, "quantity": 1, "price": 5500000},
+            {"order_id": sample_orders[1].id, "product_id": products[3].id, "quantity": 2, "price": 150000},
+        ]))
         db.session.commit()
         return jsonify({"message": "Seeded 2 orders with 3 order items successfully"}), 201
     return jsonify({"message": "Order items already exist"}), 400
@@ -87,8 +91,7 @@ def seed_orders():
 @seed_bp.route('/clear', methods=['POST'])
 def clear():
     try:
-        from sqlalchemy import text
-        OrderItem.query.delete()
+        db.session.execute(order_items.delete())
         Order.query.delete()
         Product.query.delete()
         Category.query.delete()

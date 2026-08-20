@@ -10,7 +10,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(300), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    role = db.Column(db.String(50), nullable=False, default='user')
+    role = db.Column(db.String(20), nullable=False, server_default='customer')
 
     orders = db.relationship('Order', backref='user', lazy=True)
 

@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+from app.models.order_item import order_items
 
 
 class Order(db.Model):
@@ -11,7 +12,7 @@ class Order(db.Model):
     status = db.Column(db.String(50), nullable=False, default='pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    order_items = db.relationship('OrderItem', backref='order', lazy=True)
+    products = db.relationship('Product', secondary=order_items, backref='orders')
 
     def to_dict(self):
         return {
