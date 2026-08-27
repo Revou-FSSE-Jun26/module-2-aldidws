@@ -1,6 +1,22 @@
+import os
+
+from dotenv import load_dotenv
+
 from app import create_app
+
+load_dotenv()
 
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+
+    if debug:
+        # Development: use Flask's built-in server
+        app.run(debug=True)
+    else:
+        # Production: use Waitress (multi-threaded, works on Windows)
+        from waitress import serve
+        port = int(os.getenv('PORT', 5000))
+        app.logger.info(f'Starting Waitress server on port {port} with 8 threads...')
+        serve(app, host='0.0.0.0', port=port, threads=8)

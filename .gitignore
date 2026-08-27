@@ -16,3 +16,18 @@ Thumbs.db
 .project
 .classpath
 Scripts/
+
+
+# Environment variables
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Log files
+logs/
+*.log

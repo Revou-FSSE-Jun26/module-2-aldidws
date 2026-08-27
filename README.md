@@ -94,21 +94,49 @@ The API will be available at `http://localhost:5000`.
 
 ## 📸 Screenshots
 
-### Postman — HTTP Methods
+### Postman — Users
 
 | Method | Description | Screenshot |
 |--------|-------------|------------|
-| POST | Create a new user | ![Create Users](Image/Create%20users.png) |
-| GET | Get all products | ![Get All Products](Image/Get%20All%20Product.png) |
-| GET | Get product (JSON response) | ![Get Product JSON](Image/Get%20product%20JSON.png) |
+| POST | Register a new user | ![Register User](Image/users/Register%20a%20new%20user.png) |
+| POST | Login | ![Login](Image/users/Login.png) |
+
+### Postman — Products
+
+| Method | Description | Screenshot |
+|--------|-------------|------------|
+| GET | List all products | ![List All Products](Image/products/List%20all%20products.png) |
+| GET | Get a specific product | ![Get Specific Product](Image/products/Get%20a%20specific%20product.png) |
+| POST | Create a new product | ![Create Product](Image/products/Create%20a%20new%20product.png) |
+| PUT | Update a product | ![Update Product](Image/products/Update%20a%20product.png) |
+| DELETE | Delete a product | ![Delete Product](Image/products/Delete%20a%20product.png) |
+
+### Postman — Categories
+
+| Method | Description | Screenshot |
+|--------|-------------|------------|
+| GET | List all categories | ![List All Categories](Image/categories/List%20all%20categories.png) |
+| GET | Get a specific category | ![Get Specific Category](Image/categories/Get%20a%20specific%20category.png) |
+| POST | Create a new category | ![Create Category](Image/categories/Create%20a%20new%20category.png) |
+| PUT | Update a category | ![Update Category](Image/categories/Update%20a%20category.png) |
+| DELETE | Delete a category | ![Delete Category](Image/categories/Delete%20a%20category.png) |
+
+### Postman — Orders
+
+| Method | Description | Screenshot |
+|--------|-------------|------------|
+| GET | List all orders for the current user | ![List Orders](Image/orders/List%20all%20orders%20for%20the%20current%20user.png) |
+| GET | View a specific order | ![View Order](Image/orders/View%20a%20specific%20order.png) |
+| POST | Place a new order | ![Place Order](Image/orders/Place%20a%20new%20order%20linked.png) |
+| DELETE | Delete an order | ![Delete Order](Image/orders/Delete%20an%20order.png) |
 
 ### pgAdmin — Database Tables
 
 | View | Screenshot |
 |------|------------|
-| Table Diagram / ERD | ![Diagram Tables](Image/Diagram%20tables.PNG) |
-| Order Items table | ![Order Items](Image/Order_items.png) |
-| Role column on Users | ![Role Column](Image/Role%20column%20to%20users.png) |
+| Table Diagram / ERD | ![Diagram Tables](Image/database/Diagram%20tables.PNG) |
+| Order Items table | ![Order Items](Image/database/Order_items.png) |
+| Role column on Users | ![Role Column](Image/database/Role%20column%20to%20users.png) |
 
 ---
 
@@ -137,6 +165,11 @@ module-2-aldidws/
 │   ├── seed.sql             # Sample data
 │   └── queries.sql          # Example queries
 ├── Image/                   # Screenshots for documentation
+│   ├── users/               # User endpoint screenshots
+│   ├── products/            # Product endpoint screenshots
+│   ├── categories/          # Category endpoint screenshots
+│   ├── orders/              # Order endpoint screenshots
+│   └── database/            # pgAdmin / ERD screenshots
 ├── app.py                   # Application entry point
 ├── requirements.txt         # Python dependencies
 └── README.md
