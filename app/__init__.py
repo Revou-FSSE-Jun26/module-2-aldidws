@@ -7,11 +7,54 @@ from dotenv import load_dotenv
 from flask import Flask, request, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flasgger import Swagger
 
 load_dotenv()
 
 db = SQLAlchemy()
 migrate = Migrate()
+
+# OpenAPI/Swagger configuration
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "apispec",
+            "route": "/apispec.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/docs/",
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "RevoShop API",
+        "description": "REST API for RevoShop: users, products, categories, and orders.",
+        "version": "1.0.0",
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT Authorization header. Example: 'Bearer {token}'",
+        }
+    },
+    "tags": [
+        {"name": "Health", "description": "Service health checks"},
+        {"name": "Auth", "description": "Registration and login"},
+        {"name": "Users", "description": "User endpoints"},
+        {"name": "Products", "description": "Product catalog endpoints"},
+        {"name": "Categories", "description": "Category endpoints"},
+        {"name": "Orders", "description": "Order endpoints (require authentication)"},
+        {"name": "Seed", "description": "Database seeding utilities"},
+    ],
+}
 
 
 def configure_logging(app):
@@ -141,6 +184,9 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+
+    # Initialize Swagger UI (available at /docs/)
+    Swagger(app, config=swagger_config, template=swagger_template)
 
     # Import models so they are registered with SQLAlchemy
     from app.models import User, Product, Category, Order, order_items  # noqa: F401

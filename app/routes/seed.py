@@ -9,6 +9,16 @@ seed_bp = Blueprint('seed', __name__)
 
 @seed_bp.route('/seed/users', methods=['POST'])
 def seed_users():
+    """Seed sample users
+    ---
+    tags:
+      - Seed
+    responses:
+      201:
+        description: Users seeded
+      400:
+        description: Users already exist
+    """
     if User.query.count() == 0:
         sample_users = [
             User(username='Abdul Hafidz', email='Abdul@example.com', password_hash=generate_password_hash('hashed_pw_123')),
@@ -23,6 +33,17 @@ def seed_users():
 
 @seed_bp.route('/seed/products', methods=['POST'])
 def seed_products():
+    """Seed sample products
+    Requires categories to be seeded first.
+    ---
+    tags:
+      - Seed
+    responses:
+      201:
+        description: Products seeded
+      400:
+        description: Products already exist or categories missing
+    """
     categories = Category.query.order_by(Category.id).all()
     if len(categories) < 3:
         return jsonify({"error": "You must seed the categories first!"}), 400
@@ -47,6 +68,16 @@ def seed_products():
 
 @seed_bp.route('/seed/categories', methods=['POST'])
 def seed_categories():
+    """Seed sample categories
+    ---
+    tags:
+      - Seed
+    responses:
+      201:
+        description: Categories seeded
+      400:
+        description: Categories already exist
+    """
     if Category.query.count() == 0:
         sample_categories = [
             Category(name='Wheels and Tires'),
@@ -61,6 +92,17 @@ def seed_categories():
 
 @seed_bp.route('/seed/orders', methods=['POST'])
 def seed_orders():
+    """Seed sample orders
+    Requires users and products to be seeded first.
+    ---
+    tags:
+      - Seed
+    responses:
+      201:
+        description: Orders seeded
+      400:
+        description: Order items already exist or prerequisites missing
+    """
     users = User.query.order_by(User.id).all()
     products = Product.query.order_by(Product.id).all()
 
@@ -90,6 +132,17 @@ def seed_orders():
 
 @seed_bp.route('/clear', methods=['POST'])
 def clear():
+    """Clear all table data
+    Deletes all rows and resets ID sequences.
+    ---
+    tags:
+      - Seed
+    responses:
+      200:
+        description: All data cleared
+      500:
+        description: Error while clearing data
+    """
     try:
         db.session.execute(order_items.delete())
         Order.query.delete()
