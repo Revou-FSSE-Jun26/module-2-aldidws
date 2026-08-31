@@ -28,7 +28,7 @@ def index():
     return jsonify({
         "service": "RevoShop API",
         "status": "ok",
-        "docs": "/docs/",
+        "docs": "/apidocs/",
         "health": "/health"
     })
 

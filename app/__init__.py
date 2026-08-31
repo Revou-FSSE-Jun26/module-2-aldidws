@@ -27,7 +27,7 @@ swagger_config = {
     ],
     "static_url_path": "/flasgger_static",
     "swagger_ui": True,
-    "specs_route": "/docs/",
+    "specs_route": "/apidocs/",
 }
 
 swagger_template = {
