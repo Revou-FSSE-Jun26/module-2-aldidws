@@ -18,7 +18,6 @@ def get_db_connection():
 
 @events.test_stop.add_listener
 def cleanup_test_data(environment, **kwargs):
-    """Hapus semua data test (users, orders, order_items) setelah Locust selesai."""
     print("\n[CLEANUP] Membersihkan data test dari database...")
 
     try:
@@ -72,7 +71,6 @@ class ShoppingUser(HttpUser):
     wait_time = between(1, 3)
 
     def on_start(self):
-        """Register (jika belum ada) lalu login untuk mendapat JWT token."""
         # Unique user per Locust instance to avoid conflicts
         user_id = id(self)
         self.email = f"user_{user_id}@example.com"
