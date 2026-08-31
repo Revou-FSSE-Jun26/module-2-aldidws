@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
 
-from app import create_app
-
 load_dotenv()
 
-app = create_app()
+# Reuse the module-level app created in app/__init__.py so both
+# ``gunicorn wsgi:app`` and ``gunicorn app:app`` resolve to the same instance.
+from app import app
 
 if __name__ == '__main__':
     app.run()

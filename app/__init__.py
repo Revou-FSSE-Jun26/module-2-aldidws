@@ -169,3 +169,9 @@ def create_app():
     app.logger.info('Application ready.')
 
     return app
+
+
+# WSGI entrypoint: expose a module-level ``app`` so that ``gunicorn app:app``
+# resolves. Importing the ``app`` package (this file) makes ``app.app`` the
+# Flask instance built by the factory.
+app = create_app()
