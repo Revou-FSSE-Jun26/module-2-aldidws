@@ -75,19 +75,27 @@ def update_product(product_id, data):
 
 
 def delete_product(product_id):
-    """Delete a product if no orders are linked."""
+    """Delete a product unless it is linked to an active order."""
     product = db.session.get(Product, product_id)
 
     if not product:
         return {"error": "Product not found"}, 404
 
+    from app.models import Order
     from app.models.order_item import order_items
-    linked_orders = db.session.execute(
-        order_items.select().where(order_items.c.product_id == product_id)
-    ).fetchone()
 
-    if linked_orders:
-        return {"error": "Cannot delete product with existing orders."}, 400
+    active = ('pending', 'processing', 'shipped')
+
+    linked = db.session.execute(
+        db.select(order_items.c.order_id).where(order_items.c.product_id == product_id)
+    ).scalars().all()
+
+    if linked:
+        blocking = Order.query.filter(
+            Order.id.in_(linked), Order.status.in_(active)
+        ).count()
+        if blocking:
+            return {"error": "Cannot delete product with active orders."}, 409
 
     try:
         db.session.delete(product)

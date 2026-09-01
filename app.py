@@ -1,9 +1,8 @@
 import os
-from flask_migrate import Migrate
+
 from dotenv import load_dotenv
-from flask import Flask
+
 from app import create_app
-from flask_sqlalchemy import SQLAlchemy
 
 load_dotenv()
 

@@ -104,6 +104,37 @@ def get_order(current_user, order_id):
     return order_data, 200
 
 
+VALID_STATUSES = {'pending', 'paid', 'shipped', 'completed', 'cancelled'}
+
+
+def update_order(current_user, order_id, data):
+    """Update an existing order's status. Only the owner may update it."""
+    order = db.session.get(Order, order_id)
+
+    if not order or order.is_deleted:
+        return {"error": "Order not found"}, 404
+
+    if order.user_id != current_user.id:
+        return {"error": "Unauthorized access to this order"}, 403
+
+    if not data or 'status' not in data:
+        return {"error": "Missing required field: status"}, 400
+
+    new_status = data['status']
+    if new_status not in VALID_STATUSES:
+        return {
+            "error": f"Invalid status. Must be one of: {', '.join(sorted(VALID_STATUSES))}"
+        }, 400
+
+    try:
+        order.status = new_status
+        db.session.commit()
+        return {"message": "Order updated successfully", "order": order.to_dict()}, 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return {"error": f"Failed to update order: {str(e)}"}, 500
+
+
 def delete_order(current_user, order_id):
     """Soft delete an order."""
     order = db.session.get(Order, order_id)

@@ -94,6 +94,52 @@ def get_order(current_user, order_id):
     return jsonify(result), status
 
 
+@order_bp.route('/orders/<int:order_id>', methods=['PUT'])
+@token_required
+@owner_required
+def update_order_route(current_user, order_id):
+    """Update an order
+    Only the owner of the order may update it. Currently supports updating status.
+    ---
+    tags:
+      - Orders
+    security:
+      - Bearer: []
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the order
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              enum: [pending, paid, shipped, completed, cancelled]
+              example: shipped
+    responses:
+      200:
+        description: Order updated
+      400:
+        description: Invalid input
+      401:
+        description: Missing or invalid token
+      403:
+        description: Not the owner of this order
+      404:
+        description: Order not found
+    """
+    data = request.get_json(silent=True) or {}
+    result, status = order_controller.update_order(current_user, order_id, data)
+    return jsonify(result), status
+
+
 @order_bp.route('/orders/<int:order_id>', methods=['DELETE'])
 @token_required
 @owner_required
