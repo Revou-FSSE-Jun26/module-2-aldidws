@@ -166,8 +166,23 @@ def register_error_handlers(app):
 def create_app():
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/revoshop_db')
+    # Sensitive config must be provided via environment. Fail fast rather than
+    # silently falling back to an insecure default in production.
+    secret_key = os.getenv('SECRET_KEY')
+    if not secret_key:
+        raise RuntimeError(
+            'SECRET_KEY environment variable is required. '
+            'Set it in your .env file (see .env.example).'
+        )
+    app.config['SECRET_KEY'] = secret_key
+
+    database_url = os.getenv('DATABASE_URL')
+    if not database_url:
+        raise RuntimeError(
+            'DATABASE_URL environment variable is required. '
+            'Set it in your .env file (see .env.example).'
+        )
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', 'False').lower() == 'true'
 
     # Connection pooling for better concurrency performance

@@ -139,6 +139,9 @@ def delete_order(current_user, order_id):
     """Soft delete an order."""
     order = db.session.get(Order, order_id)
 
+    if not order:
+        return {"error": "Order not found"}, 404
+
     if order.is_deleted:
         return {"error": "Order already deleted"}, 404
 

@@ -104,45 +104,64 @@ class ShoppingUser(HttpUser):
             else:
                 response.failure(f"Login failed: {response.status_code}")
 
-    @task(5)
-    def browse_products(self):
-        """GET all products - most common action."""
-        self.client.get("/products")
+    @task
+    def shopping_journey(self):
+        """Full required user journey, executed in sequence:
+        1. GET all products
+        2. GET a single product
+        3. POST a new order
+        4. GET the created order
+        """
+        # 1. GET all products
+        with self.client.get("/products", catch_response=True) as response:
+            if response.status_code == 200:
+                response.success()
+            else:
+                response.failure(f"GET /products failed: {response.status_code}")
 
-    @task(3)
-    def view_product(self):
-        """GET a specific product by ID."""
+        # 2. GET a single product
         product_id = random.choice(PRODUCT_IDS)
-        self.client.get(f"/products/{product_id}", name="/products/<id>")
+        with self.client.get(
+            f"/products/{product_id}", name="/products/<id>", catch_response=True
+        ) as response:
+            if response.status_code == 200:
+                response.success()
+            elif response.status_code == 404:
+                # Product id not present in this environment is acceptable
+                response.success()
+            else:
+                response.failure(f"GET /products/<id> failed: {response.status_code}")
 
-    @task(1)
-    def place_order(self):
-        """POST a new order then GET the order details."""
-        product_id = random.choice(PRODUCT_IDS)
-
+        # 3. POST a new order
+        order_id = None
         with self.client.post("/orders", json={
             "items": [
                 {"product_id": product_id, "quantity": 1}
             ]
         }, catch_response=True) as response:
             if response.status_code == 201:
-                order_data = response.json().get("order", {})
-                order_id = order_data.get("id")
+                order_id = response.json().get("order", {}).get("id")
                 response.success()
-
-                # Follow up: get the order details
-                if order_id:
-                    self.client.get(
-                        f"/orders/{order_id}",
-                        name="/orders/<id>"
-                    )
             elif response.status_code == 400 and "stock" in response.text.lower():
                 # Out of stock is not a server error
                 response.success()
+            elif response.status_code == 404:
+                # Chosen product not found -> cannot order it, not a server error
+                response.success()
             else:
-                response.failure(f"Order failed: {response.status_code} - {response.text}")
+                response.failure(f"POST /orders failed: {response.status_code} - {response.text}")
 
-    @task(2)
+        # 4. GET the created order
+        if order_id:
+            with self.client.get(
+                f"/orders/{order_id}", name="/orders/<id>", catch_response=True
+            ) as response:
+                if response.status_code == 200:
+                    response.success()
+                else:
+                    response.failure(f"GET /orders/<id> failed: {response.status_code}")
+
+    @task
     def view_my_orders(self):
         """GET list of user's orders."""
         self.client.get("/orders")

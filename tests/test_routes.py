@@ -211,27 +211,53 @@ class TestProductRoutes:
 # ============================================================
 
 class TestCategoryRoutes:
+    # ---------- GET all (happy path) ----------
     def test_get_all_categories(self, client):
+        # Seed at least one category so the list is non-trivial
+        client.post('/categories', json={'name': 'Seeded Category'})
+
         resp = client.get('/categories')
         assert resp.status_code == 200
-        assert isinstance(resp.get_json(), list)
+        data = resp.get_json()
+        assert isinstance(data, list)
+        assert len(data) >= 1
+        # Each item should expose the expected shape
+        first = data[0]
+        assert 'id' in first
+        assert 'name' in first
 
+    # ---------- POST (happy path) ----------
     def test_create_category_success(self, client):
         resp = client.post('/categories', json={
             'name': 'Test Category',
             'description': 'A test category'
         })
         assert resp.status_code == 201
-        assert resp.get_json()['name'] == 'Test Category'
+        data = resp.get_json()
+        assert data['name'] == 'Test Category'
+        assert data['description'] == 'A test category'
+        assert 'id' in data
 
+    # ---------- POST (error cases) ----------
     def test_create_category_missing_name(self, client):
         resp = client.post('/categories', json={
             'description': 'No name'
         })
         assert resp.status_code == 400
+        data = resp.get_json()
+        assert 'error' in data
+        assert 'name' in data['error'].lower()
 
+    def test_create_category_empty_body(self, client):
+        resp = client.post('/categories', json={})
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert 'error' in data
+        assert data['error']
+
+    # ---------- GET by id (happy path) ----------
     def test_get_category_by_id(self, client):
-        # Create first
+        # Create category first
         create_resp = client.post('/categories', json={
             'name': 'Findable Category'
         })
@@ -239,29 +265,81 @@ class TestCategoryRoutes:
 
         resp = client.get(f'/categories/{category_id}')
         assert resp.status_code == 200
-        assert resp.get_json()['name'] == 'Findable Category'
+        data = resp.get_json()
+        assert data['id'] == category_id
+        assert data['name'] == 'Findable Category'
+        # GET by id must include the category's products list
+        assert 'products' in data
+        assert isinstance(data['products'], list)
 
+    def test_get_category_by_id_includes_products(self, client):
+        # Create category and a product linked to it
+        cat_resp = client.post('/categories', json={'name': 'Category With Product'})
+        category_id = cat_resp.get_json()['id']
+
+        client.post('/products', json={
+            'name': 'Linked Product',
+            'price': 12345,
+            'stock': 7,
+            'category_id': category_id
+        })
+
+        resp = client.get(f'/categories/{category_id}')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert isinstance(data['products'], list)
+        assert any(p['name'] == 'Linked Product' for p in data['products'])
+
+    # ---------- GET by id (error case) ----------
     def test_get_category_not_found(self, client):
         resp = client.get('/categories/99999')
         assert resp.status_code == 404
+        data = resp.get_json()
+        assert 'error' in data
+        assert data['error']
 
+    # ---------- PUT (happy path) ----------
     def test_update_category(self, client):
         # Create first
         create_resp = client.post('/categories', json={
-            'name': 'Old Name'
+            'name': 'Old Name',
+            'description': 'Old description'
         })
         category_id = create_resp.get_json()['id']
 
         resp = client.put(f'/categories/{category_id}', json={
-            'name': 'New Name'
+            'name': 'New Name',
+            'description': 'New description'
         })
         assert resp.status_code == 200
-        assert resp.get_json()['category']['name'] == 'New Name'
+        data = resp.get_json()
+        assert 'message' in data
+        assert data['category']['name'] == 'New Name'
+        assert data['category']['description'] == 'New description'
 
+        # Confirm the change persisted
+        get_resp = client.get(f'/categories/{category_id}')
+        assert get_resp.get_json()['name'] == 'New Name'
+
+    # ---------- PUT (error cases) ----------
     def test_update_category_not_found(self, client):
         resp = client.put('/categories/99999', json={'name': 'Ghost'})
         assert resp.status_code == 404
+        data = resp.get_json()
+        assert 'error' in data
+        assert data['error']
 
+    def test_update_category_empty_body(self, client):
+        create_resp = client.post('/categories', json={'name': 'Keep Me'})
+        category_id = create_resp.get_json()['id']
+
+        resp = client.put(f'/categories/{category_id}', json={})
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert 'error' in data
+        assert data['error']
+
+    # ---------- DELETE (happy path) ----------
     def test_delete_category(self, client):
         create_resp = client.post('/categories', json={
             'name': 'To Delete Category'
@@ -270,10 +348,21 @@ class TestCategoryRoutes:
 
         resp = client.delete(f'/categories/{category_id}')
         assert resp.status_code == 200
+        data = resp.get_json()
+        assert 'message' in data
+        assert data['message']
 
+        # Confirm it is really gone
+        get_resp = client.get(f'/categories/{category_id}')
+        assert get_resp.status_code == 404
+
+    # ---------- DELETE (error case) ----------
     def test_delete_category_not_found(self, client):
         resp = client.delete('/categories/99999')
         assert resp.status_code == 404
+        data = resp.get_json()
+        assert 'error' in data
+        assert data['error']
 
 
 # ============================================================
