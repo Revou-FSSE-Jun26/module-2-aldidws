@@ -4,6 +4,12 @@ RevoShop is a back-end REST API for an online store platform specializing in car
 
 ---
 
+## 🌐 Deployment
+
+Live deployment (Render): [https://dashboard.render.com/project/prj-daamthajnfac73917220/environment/evm-daap6cgae00c73agq25g](https://dashboard.render.com/project/prj-daamthajnfac73917220/environment/evm-daap6cgae00c73agq25g)
+
+---
+
 ## ✨ Features Implemented
 
 - **Full CRUD** for Products, Categories, and Orders (Create, Read, Update, Delete).
